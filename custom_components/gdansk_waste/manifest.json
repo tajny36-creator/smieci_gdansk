@@ -1,0 +1,8 @@
+{
+  "domain": "gdansk_waste",
+  "name": "Gdansk Waste Collection",
+  "config_flow": true,
+  "documentation": "https://czystemiasto.gdansk.pl/harmonogram-odbioru-odpadow/",
+  "iot_class": "cloud_polling",
+  "version": "0.1.0"
+}
