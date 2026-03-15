@@ -1,30 +1,29 @@
 # Gdansk Waste Collection for Home Assistant
 
-Custom integration do Home Assistanta, ktora pobiera z miejskiego harmonogramu Gdanska najblizsze terminy odbioru odpadow dla konkretnej ulicy i numeru domu.
+Integracja Home Assistant pokazujaca najblizsze odbiory smieci dla konkretnego adresu w Gdansku. Dane sa pobierane z miejskiego harmonogramu odpadow.
 
-## Co robi
+## Co dostajesz
 
-- dodaje config flow w UI Home Assistanta
-- wyszukuje adres po ulicy i numerze domu
-- obsluguje wieloznaczne adresy, np. rozne grupy zabudowy
-- tworzy sensor z najblizszym odbiorem
-- tworzy dodatkowe sensory dla poszczegolnych frakcji odpadow
-
-## Instalacja
-
-1. Skopiuj katalog `custom_components/gdansk_waste` do katalogu `config/custom_components` w Home Assistant.
-2. Zrestartuj Home Assistanta.
-3. Wejdz w `Ustawienia -> Urzadzenia i uslugi -> Dodaj integracje`.
-4. Wyszukaj `Gdansk Waste Collection`.
-5. Podaj ulice i numer domu w Gdansku.
+- konfiguracje z poziomu UI Home Assistanta
+- wyszukiwanie po ulicy i numerze domu
+- obsluge niejednoznacznych adresow, np. roznych grup zabudowy
+- sensor z najblizszym odbiorem
+- dodatkowe sensory dla kazdej frakcji odpadow
 
 ## Instalacja przez HACS
 
-Repozytorium zawiera plik `hacs.json`, wiec moze byc dodane jako `Custom repository` typu `Integration`.
+1. Utworz na GitHubie nowe repozytorium, najlepiej `ha-gdansk-waste`.
+2. Wrzuc do niego cala zawartosc tego folderu.
+3. Utworz GitHub Release o nazwie i tagu `v1.0.2`.
+4. W HACS dodaj repo jako `Custom repository` typu `Integration`.
+5. Zainstaluj release `v1.0.2`, a nie sam commit z galezi.
 
-Wazne: HACS nie powinien instalowac tej integracji z samego skrótu commita typu `05f335e`. Jesli repo nie ma GitHub Release, HACS potrafi potraktowac hash ostatniego commita jako wersje i wtedy instalacja konczy sie bledem.
+## Instalacja reczna
 
-Dlatego przy instalacji przez HACS opublikuj GitHub Release, np. `v0.1.1`, i zainstaluj wlasnie ten release.
+1. Skopiuj katalog `custom_components/gdansk_waste` do `config/custom_components` w Home Assistant.
+2. Zrestartuj Home Assistanta.
+3. Wejdz w `Ustawienia -> Urzadzenia i uslugi -> Dodaj integracje`.
+4. Wyszukaj `Gdansk Waste Collection`.
 
 ## Sensory
 
@@ -33,4 +32,8 @@ Integracja tworzy:
 - sensor `Najblizszy odbior`
 - osobne sensory dat dla frakcji takich jak `BIO`, `PAPIER`, `SZKLO`, `RESZTKOWE`, `METALE I TWORZYWA SZTUCZNE`, `WIELKOGABARYTY`
 
-Termin platnosci jest celowo pomijany, bo nie jest odbiorem odpadow.
+Termin `TERMINY PLATNOSCI` jest pomijany, bo nie dotyczy odbioru odpadow.
+
+## Po wrzuceniu na GitHub
+
+Jesli Twoj login GitHub albo nazwa repo beda inne niz `WERTJ/ha-gdansk-waste`, zaktualizuj pola `documentation`, `issue_tracker` i `codeowners` w pliku `custom_components/gdansk_waste/manifest.json`.

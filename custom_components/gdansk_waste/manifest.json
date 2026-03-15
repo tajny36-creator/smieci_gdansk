@@ -1,8 +1,16 @@
 {
   "domain": "gdansk_waste",
   "name": "Gdansk Waste Collection",
+  "version": "1.0.2",
+  "documentation": "https://github.com/WERTJ/ha-gdansk-waste",
+  "issue_tracker": "https://github.com/WERTJ/ha-gdansk-waste/issues",
+  "codeowners": [
+    "@WERTJ"
+  ],
   "config_flow": true,
-  "documentation": "https://czystemiasto.gdansk.pl/harmonogram-odbioru-odpadow/",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "version": "0.1.1"
+  "loggers": [
+    "custom_components.gdansk_waste"
+  ]
 }
