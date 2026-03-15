@@ -6,15 +6,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_NAME, CONF_STREET
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 
 from .api import (
     GdanskWasteAddressNotFoundError,
@@ -24,7 +17,14 @@ from .api import (
     GdanskWasteNoScheduleError,
     ResolvedAddress,
 )
-from .const import CONF_CANDIDATE, CONF_HOUSE_NUMBER, DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_CANDIDATE,
+    CONF_HOUSE_NUMBER,
+    CONF_NAME,
+    CONF_STREET,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class GdanskWasteConfigFlow(ConfigFlow, domain=DOMAIN):
         self._candidates: dict[str, ResolvedAddress] = {}
         self._user_input: dict[str, str] = {}
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None):
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -86,7 +86,7 @@ class GdanskWasteConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_select_address(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ):
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -102,14 +102,11 @@ class GdanskWasteConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="select_address",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_CANDIDATE): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                {"value": candidate_id, "label": candidate.label}
-                                for candidate_id, candidate in self._candidates.items()
-                            ],
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
+                    vol.Required(CONF_CANDIDATE): vol.In(
+                        {
+                            candidate_id: candidate.label
+                            for candidate_id, candidate in self._candidates.items()
+                        }
                     )
                 }
             ),
@@ -125,7 +122,7 @@ class GdanskWasteConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_create_entry_from_candidate(
         self,
         candidate: ResolvedAddress,
-    ) -> FlowResult:
+    ):
         await self.async_set_unique_id(candidate.unique_id)
         self._abort_if_unique_id_configured()
 
@@ -142,7 +139,7 @@ class GdanskWasteConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         candidate: ResolvedAddress,
         errors: dict[str, str],
-    ) -> FlowResult | None:
+    ):
         try:
             return await self._async_create_entry_from_candidate(candidate)
         except GdanskWasteConnectionError:

@@ -9,8 +9,6 @@ import unicodedata
 
 from aiohttp import ClientError, ClientSession
 
-from homeassistant.const import CONF_NAME, CONF_STREET
-
 from .const import (
     API_BASE_URL,
     COMMUNITY_ID,
@@ -18,9 +16,11 @@ from .const import (
     CONF_GROUP_DESCRIPTION,
     CONF_GROUP_NAME,
     CONF_HOUSE_NUMBER,
+    CONF_NAME,
     CONF_SCHEDULE_PERIOD_ID,
     CONF_SIDES,
     CONF_STAMP,
+    CONF_STREET,
     CONF_STREET_ID,
     CONF_STREET_NAME,
     CONF_TOWN_ID,
@@ -405,7 +405,7 @@ class GdanskWasteApiClient:
                 continue
 
             waste_type = str(description.get("name", "")).strip()
-            if not waste_type or waste_type in IGNORED_SCHEDULE_TYPES:
+            if not waste_type or normalize_text(waste_type) in IGNORED_SCHEDULE_TYPES:
                 continue
             if str(description.get("doNotShowDates", "0")) == "1":
                 continue

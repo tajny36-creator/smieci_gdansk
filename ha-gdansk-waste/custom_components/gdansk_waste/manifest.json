@@ -1,7 +1,7 @@
 {
   "domain": "gdansk_waste",
   "name": "Gdansk Waste Collection",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://github.com/WERTJ/ha-gdansk-waste",
   "issue_tracker": "https://github.com/WERTJ/ha-gdansk-waste/issues",
   "codeowners": [
