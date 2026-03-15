@@ -1,4 +1,5 @@
 {
   "name": "Gdansk Waste Collection",
-  "country": "PL"
+  "country": "PL",
+  "hide_default_branch": true
 }

@@ -22,7 +22,9 @@ Custom integration do Home Assistanta, ktora pobiera z miejskiego harmonogramu G
 
 Repozytorium zawiera plik `hacs.json`, wiec moze byc dodane jako `Custom repository` typu `Integration`.
 
-Jesli publikujesz to na GitHubie, najlepiej utworz tez normalny release, np. `v0.1.1`. Bez release HACS moze uzyc skrotu ostatniego commita jako wersji, a to bywa problematyczne.
+Wazne: HACS nie powinien instalowac tej integracji z samego skrótu commita typu `05f335e`. Jesli repo nie ma GitHub Release, HACS potrafi potraktowac hash ostatniego commita jako wersje i wtedy instalacja konczy sie bledem.
+
+Dlatego przy instalacji przez HACS opublikuj GitHub Release, np. `v0.1.1`, i zainstaluj wlasnie ten release.
 
 ## Sensory
 
