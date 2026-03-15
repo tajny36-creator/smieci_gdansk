@@ -18,6 +18,12 @@ Custom integration do Home Assistanta, ktora pobiera z miejskiego harmonogramu G
 4. Wyszukaj `Gdansk Waste Collection`.
 5. Podaj ulice i numer domu w Gdansku.
 
+## Instalacja przez HACS
+
+Repozytorium zawiera plik `hacs.json`, wiec moze byc dodane jako `Custom repository` typu `Integration`.
+
+Jesli publikujesz to na GitHubie, najlepiej utworz tez normalny release, np. `v0.1.1`. Bez release HACS moze uzyc skrotu ostatniego commita jako wersji, a to bywa problematyczne.
+
 ## Sensory
 
 Integracja tworzy:
