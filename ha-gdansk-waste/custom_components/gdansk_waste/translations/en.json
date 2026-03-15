@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Gdansk waste schedule",
+        "description": "Enter a street and house number to download the nearest waste pickup dates.",
+        "data": {
+          "name": "Integration name",
+          "street": "Street",
+          "house_number": "House number"
+        }
+      },
+      "select_address": {
+        "title": "Select address variant",
+        "description": "More than one address variant was found for {address}. Choose the correct one.",
+        "data": {
+          "candidate": "Address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the waste schedule API.",
+      "address_not_found": "The provided address could not be found.",
+      "no_schedule": "No schedule was found for this address.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This address is already configured."
+    }
+  }
+}

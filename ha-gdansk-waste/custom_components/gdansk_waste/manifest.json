@@ -1,0 +1,16 @@
+{
+  "domain": "gdansk_waste",
+  "name": "Gdansk Waste Collection",
+  "version": "1.0.0",
+  "documentation": "https://github.com/WERTJ/ha-gdansk-waste",
+  "issue_tracker": "https://github.com/WERTJ/ha-gdansk-waste/issues",
+  "codeowners": [
+    "@WERTJ"
+  ],
+  "config_flow": true,
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": [
+    "custom_components.gdansk_waste"
+  ]
+}
