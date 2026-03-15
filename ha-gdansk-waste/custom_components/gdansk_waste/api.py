@@ -481,9 +481,12 @@ class GdanskWasteApiClient:
     def _merge_choosed_street_ids(self, streets: list[dict[str, Any]]) -> str:
         identifiers: list[str] = []
         for street in streets:
+            raw_ids = street.get("choosedStreetIds")
+            if raw_ids in (None, "", []):
+                continue
             identifiers.extend(
                 part.strip()
-                for part in str(street.get("choosedStreetIds", "")).split(",")
+                for part in str(raw_ids).split(",")
                 if part.strip()
             )
         return ",".join(dict.fromkeys(identifiers))
