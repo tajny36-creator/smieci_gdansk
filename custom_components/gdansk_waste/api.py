@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, replace
 from datetime import date
 import logging
@@ -204,10 +205,17 @@ class GdanskWasteApiClient:
             async with self._session.post(url, data=payload, timeout=REQUEST_TIMEOUT) as response:
                 response.raise_for_status()
                 result = await response.json(content_type=None)
+        except asyncio.TimeoutError as err:
+            raise GdanskWasteConnectionError(f"Timeout while calling {endpoint}") from err
         except ClientError as err:
             raise GdanskWasteConnectionError(f"Cannot reach {endpoint}") from err
         except ValueError as err:
             raise GdanskWasteApiError(f"Invalid JSON returned by {endpoint}") from err
+
+        if not isinstance(result, dict):
+            raise GdanskWasteApiError(
+                f"Unexpected payload type from {endpoint}: {type(result).__name__}"
+            )
 
         if not result.get("success"):
             raise GdanskWasteApiError(
@@ -289,38 +297,48 @@ class GdanskWasteApiClient:
         period = await self.async_get_current_period()
         period_id = str(period["id"])
 
-        streets = await self.async_get_streets_for_town(town_id, period_id)
-        matching_streets = self._find_matching_streets(streets, street)
-        if not matching_streets:
-            raise GdanskWasteAddressNotFoundError(
-                f"Street '{street}' was not found in Gdansk"
-            )
-
-        api_street_name = str(matching_streets[0]["name"])
-        choosed_street_ids = self._merge_choosed_street_ids(matching_streets)
+        requested_street = street.strip()
         initial_result = await self.async_get_street_details(
-            choosed_street_ids=choosed_street_ids,
+            choosed_street_ids="",
             house_number=house_number,
             town_id=town_id,
-            street_name=api_street_name,
+            street_name=requested_street,
             schedule_period_id=period_id,
             group_id="1",
         )
 
-        groups = initial_result.get("groups", {}).get("items", [])
+        groups_section = initial_result.get("groups", {})
+        groups = groups_section.get("items", []) if isinstance(groups_section, dict) else []
+        if not isinstance(groups, list):
+            groups = []
+
         candidates: list[ResolvedAddress] = []
         if groups:
-            group_id = str(initial_result.get("groups", {}).get("groupId") or "g1")
+            group_id = str(groups_section.get("groupId") or "g1")
             for group in groups:
                 group_name = str(group.get("name", ""))
-                group_result = await self.async_get_street_details(
-                    choosed_street_ids=str(group.get("choosedStreetIds", "")),
-                    house_number=house_number,
-                    town_id=town_id,
-                    street_name=str(group.get("streetName") or api_street_name),
-                    schedule_period_id=period_id,
-                    group_id=group_id,
-                )
+                try:
+                    group_result = await self.async_get_street_details(
+                        choosed_street_ids=str(group.get("choosedStreetIds", "")),
+                        house_number=house_number,
+                        town_id=town_id,
+                        street_name=str(group.get("streetName") or requested_street),
+                        schedule_period_id=period_id,
+                        group_id=group_id,
+                    )
+                except GdanskWasteApiError:
+                    if group_id != "1":
+                        group_result = await self.async_get_street_details(
+                            choosed_street_ids=str(group.get("choosedStreetIds", "")),
+                            house_number=house_number,
+                            town_id=town_id,
+                            street_name=str(group.get("streetName") or requested_street),
+                            schedule_period_id=period_id,
+                            group_id="1",
+                        )
+                    else:
+                        continue
+
                 candidates.extend(
                     self._parse_resolved_addresses(
                         group_result,
@@ -331,7 +349,7 @@ class GdanskWasteApiClient:
                         fallback_group_name=group_name,
                     )
                 )
-        else:
+        if not candidates:
             candidates.extend(
                 self._parse_resolved_addresses(
                     initial_result,
@@ -341,6 +359,42 @@ class GdanskWasteApiClient:
                     schedule_period_id=period_id,
                 )
             )
+
+        # Fallback for rare API cases where the direct lookup returns no streets.
+        if not candidates:
+            try:
+                streets = await self.async_get_streets_for_town(town_id, period_id)
+                matching_streets = self._find_matching_streets(streets, requested_street)
+                if matching_streets:
+                    api_street_name = str(matching_streets[0].get("name") or requested_street)
+                    choosed_street_ids = self._merge_choosed_street_ids(matching_streets)
+                    fallback_result = await self.async_get_street_details(
+                        choosed_street_ids=choosed_street_ids,
+                        house_number=house_number,
+                        town_id=town_id,
+                        street_name=api_street_name,
+                        schedule_period_id=period_id,
+                        group_id="1",
+                    )
+                    candidates.extend(
+                        self._parse_resolved_addresses(
+                            fallback_result,
+                            town_id=town_id,
+                            town_name=town_name,
+                            house_number=house_number,
+                            schedule_period_id=period_id,
+                        )
+                    )
+            except GdanskWasteError:
+                _LOGGER.debug("Fallback street lookup failed for '%s %s'", street, house_number)
+
+        filtered = [
+            candidate
+            for candidate in candidates
+            if self._street_matches_request(candidate.street_name, requested_street)
+        ]
+        if filtered:
+            candidates = filtered
 
         deduplicated = self._deduplicate_candidates(candidates)
         if not deduplicated:
@@ -477,6 +531,17 @@ class GdanskWasteApiClient:
             if normalized_requested
             and normalized_requested in normalize_text(str(street.get("name", "")))
         ]
+
+    def _street_matches_request(self, candidate_street: str, requested_street: str) -> bool:
+        normalized_candidate = normalize_text(candidate_street)
+        normalized_requested = normalize_text(requested_street)
+        if not normalized_candidate or not normalized_requested:
+            return False
+        if normalized_candidate == normalized_requested:
+            return True
+        if normalized_candidate.endswith(normalized_requested):
+            return True
+        return normalized_requested in normalized_candidate
 
     def _merge_choosed_street_ids(self, streets: list[dict[str, Any]]) -> str:
         identifiers: list[str] = []

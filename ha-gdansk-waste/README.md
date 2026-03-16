@@ -14,9 +14,9 @@ Integracja Home Assistant pokazujaca najblizsze odbiory smieci dla konkretnego a
 
 1. Utworz na GitHubie nowe repozytorium, najlepiej `ha-gdansk-waste`.
 2. Wrzuc do niego cala zawartosc tego folderu.
-3. Utworz GitHub Release o nazwie i tagu `v1.0.3`.
+3. Utworz GitHub Release o nazwie i tagu `v1.0.4`.
 4. W HACS dodaj repo jako `Custom repository` typu `Integration`.
-5. Zainstaluj release `v1.0.3`, a nie sam commit z galezi.
+5. Zainstaluj release `v1.0.4`, a nie sam commit z galezi.
 
 ## Instalacja reczna
 

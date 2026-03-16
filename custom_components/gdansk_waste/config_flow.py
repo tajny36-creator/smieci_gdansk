@@ -148,6 +148,9 @@ class GdanskWasteConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "no_schedule"
         except GdanskWasteApiError:
             errors["base"] = "unknown"
+        except Exception:
+            _LOGGER.exception("Unexpected error while creating config entry")
+            errors["base"] = "unknown"
         return None
 
     @callback
