@@ -76,6 +76,10 @@ class GdanskWasteBaseSensor(CoordinatorEntity[GdanskWasteDataUpdateCoordinator],
             configuration_url="https://czystemiasto.gdansk.pl/harmonogram-odbioru-odpadow/",
         )
 
+    @property
+    def available(self) -> bool:
+        return self.coordinator.data is not None
+
     def _days_remaining(self, event: WasteEvent | None) -> int | None:
         if event is None:
             return None

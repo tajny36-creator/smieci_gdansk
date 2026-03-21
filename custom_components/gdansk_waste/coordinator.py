@@ -59,6 +59,19 @@ class GdanskWasteDataUpdateCoordinator(DataUpdateCoordinator[ScheduleData]):
 
             schedule = await self.api.async_fetch_schedule(address)
             if not schedule.upcoming_events:
+                address = await self.api.async_select_address(
+                    street=address.street_name,
+                    house_number=address.house_number,
+                    preferred_group=address.group_name,
+                    preferred_street_id=address.street_id,
+                )
+                schedule = await self.api.async_fetch_schedule(address)
+
+            self._store_resolved_address(schedule.address)
+            return schedule
+        except (GdanskWasteAddressNotFoundError, GdanskWasteNoScheduleError, GdanskWasteApiError):
+            try:
+                # IDs and group mappings can change server-side without notice.
                 refreshed_address = await self.api.async_select_address(
                     street=address.street_name,
                     house_number=address.house_number,
@@ -66,16 +79,40 @@ class GdanskWasteDataUpdateCoordinator(DataUpdateCoordinator[ScheduleData]):
                     preferred_street_id=address.street_id,
                 )
                 schedule = await self.api.async_fetch_schedule(refreshed_address)
-
-            self._store_resolved_address(schedule.address)
-            return schedule
-        except (
-            GdanskWasteAddressNotFoundError,
-            GdanskWasteApiError,
-            GdanskWasteConnectionError,
-            GdanskWasteNoScheduleError,
-        ) as err:
+                self._store_resolved_address(schedule.address)
+                return schedule
+            except (
+                GdanskWasteAddressNotFoundError,
+                GdanskWasteApiError,
+                GdanskWasteConnectionError,
+                GdanskWasteNoScheduleError,
+            ) as err:
+                if self.data is not None:
+                    _LOGGER.warning(
+                        "Update failed for %s, keeping last known schedule: %s",
+                        address.label,
+                        err,
+                    )
+                    return self.data
+                raise UpdateFailed(str(err)) from err
+        except GdanskWasteConnectionError as err:
+            if self.data is not None:
+                _LOGGER.warning(
+                    "Connection issue for %s, keeping last known schedule: %s",
+                    address.label,
+                    err,
+                )
+                return self.data
             raise UpdateFailed(str(err)) from err
+        except Exception as err:
+            if self.data is not None:
+                _LOGGER.exception(
+                    "Unexpected update error for %s, keeping last known schedule",
+                    address.label,
+                )
+                return self.data
+            raise UpdateFailed(str(err)) from err
+
 
     def _store_resolved_address(self, address: ResolvedAddress) -> None:
         current_data = dict(self.config_entry.data)
